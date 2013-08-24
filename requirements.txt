@@ -1,2 +1,3 @@
 feedparser
 beautifulsoup
+git+git://github.com/WebFilings/furious.git#egg=furious
