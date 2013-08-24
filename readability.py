@@ -5,15 +5,9 @@
 #
 # this is code demo: http://yanghao.org/tools/readability
 
-from __future__ import division
-import os
-import sys
-import urllib
 import urlparse
 import re
-import HTMLParser
 import math
-import urlparse
 import posixpath
 
 #import chardet
