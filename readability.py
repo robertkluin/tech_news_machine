@@ -14,31 +14,39 @@ import posixpath
 from BeautifulSoup import BeautifulSoup
 #from bs4 import BeautifulSoup
 
-class Readability:
+REGEXPS = {
+    'unlikelyCandidates': re.compile("combx|comment|community|disqus|extra|"
+                                     "foot|header|menu|remark|rss|shoutbox|"
+                                     "sidebar|sponsor|ad-break|agegate|"
+                                     "pagination|pager|popup|tweet|twitter",
+                                     re.I),
+    'okMaybeItsACandidate': re.compile("and|article|body|column|main|shadow",
+                                       re.I),
+    'positive': re.compile("article|body|content|entry|hentry|main|page|"
+                           "pagination|post|text|blog|story", re.I),
+    'negative': re.compile("combx|comment|com|contact|foot|footer|footnote|"
+                           "masthead|media|meta|outbrain|promo|related|scroll|"
+                           "shoutbox|sidebar|sponsor|shopping|tags|tool|widget",
+                           re.I),
+    'extraneous': re.compile("print|archive|comment|discuss|e[\-]?mail|share|"
+                             "reply|all|login|sign|single", re.I),
+    'divToPElements': re.compile("<(a|blockquote|dl|div|img|ol|p|pre|table|ul)",
+                                 re.I),
+    'replaceBrs': re.compile("(<br[^>]*>[ \n\r\t]*){2,}", re.I),
+    'replaceFonts': re.compile("<(/?)font[^>]*>", re.I),
+    'trim': re.compile("^\s+|\s+$", re.I),
+    'normalize': re.compile("\s{2,}", re.I),
+    'killBreaks': re.compile("(<br\s*/?>(\s|&nbsp;?)*)+", re.I),
+    'videos': re.compile("http://(www\.)?(youtube|vimeo)\.com", re.I),
+    'skipFootnoteLink': re.compile("^\s*(\[?[a-z0-9]{1,2}\]?|^|edit|"
+                                   "citation needed)\s*$", re.I),
+    'nextLink': re.compile("(next|weiter|continue|>([^\|]|$)|»([^\|]|$))",
+                           re.I),
+    'prevLink': re.compile("(prev|earl|old|new|<|«)", re.I)
+}
 
-    regexps = {
-        'unlikelyCandidates': re.compile("combx|comment|community|disqus|extra|foot|header|menu|"
-                                         "remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate|"
-                                         "pagination|pager|popup|tweet|twitter",re.I),
-        'okMaybeItsACandidate': re.compile("and|article|body|column|main|shadow", re.I),
-        'positive': re.compile("article|body|content|entry|hentry|main|page|pagination|post|text|"
-                               "blog|story",re.I),
-        'negative': re.compile("combx|comment|com|contact|foot|footer|footnote|masthead|media|"
-                               "meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|"
-                               "shopping|tags|tool|widget", re.I),
-        'extraneous': re.compile("print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|"
-                                 "sign|single",re.I),
-        'divToPElements': re.compile("<(a|blockquote|dl|div|img|ol|p|pre|table|ul)",re.I),
-        'replaceBrs': re.compile("(<br[^>]*>[ \n\r\t]*){2,}",re.I),
-        'replaceFonts': re.compile("<(/?)font[^>]*>",re.I),
-        'trim': re.compile("^\s+|\s+$",re.I),
-        'normalize': re.compile("\s{2,}",re.I),
-        'killBreaks': re.compile("(<br\s*/?>(\s|&nbsp;?)*)+",re.I),
-        'videos': re.compile("http://(www\.)?(youtube|vimeo)\.com",re.I),
-        'skipFootnoteLink': re.compile("^\s*(\[?[a-z0-9]{1,2}\]?|^|edit|citation needed)\s*$",re.I),
-        'nextLink': re.compile("(next|weiter|continue|>([^\|]|$)|»([^\|]|$))",re.I),
-        'prevLink': re.compile("(prev|earl|old|new|<|«)",re.I)
-    }
+
+class Readability(object):
 
     def __init__(self, input, url):
         """
@@ -54,8 +62,9 @@ class Readability:
 
         self.input = input
         self.url = url
-        self.input = self.regexps['replaceBrs'].sub("</p><p>",self.input)
-        self.input = self.regexps['replaceFonts'].sub("<\g<1>span>",self.input)
+        self.input = REGEXPS['replaceBrs'].sub("</p><p>", self.input)
+        self.input = REGEXPS['replaceFonts'].sub("<\g<1>span>",
+                                                      self.input)
 
         self.html = BeautifulSoup(self.input)
 
@@ -67,7 +76,6 @@ class Readability:
 
         self.title = self.getArticleTitle()
         self.content = self.grabArticle()
-
 
     def removeScript(self):
         for elem in self.html.findAll("script"):
@@ -85,10 +93,10 @@ class Readability:
 
         for elem in self.html.findAll(True):
 
-            unlikelyMatchString = elem.get('id','')+elem.get('class','')
+            unlikelyMatchString = elem.get('id', '') + elem.get('class', '')
 
-            if self.regexps['unlikelyCandidates'].search(unlikelyMatchString) and \
-                not self.regexps['okMaybeItsACandidate'].search(unlikelyMatchString) and \
+            if REGEXPS['unlikelyCandidates'].search(unlikelyMatchString) and \
+                not REGEXPS['okMaybeItsACandidate'].search(unlikelyMatchString) and \
                 elem.name != 'body':
 #                print elem
 #                print '--------------------'
@@ -98,7 +106,7 @@ class Readability:
 
             if elem.name == 'div':
                 s = elem.renderContents(encoding=None)
-                if not self.regexps['divToPElements'].search(s):
+                if not REGEXPS['divToPElements'].search(s):
                     elem.name = 'p'
 
         for node in self.html.findAll('p'):
@@ -182,7 +190,7 @@ class Readability:
 
         content = content.renderContents(encoding=None)
 
-        content = self.regexps['killBreaks'].sub("<br />", content)
+        content = REGEXPS['killBreaks'].sub("<br />", content)
 
         return content
 
@@ -198,10 +206,10 @@ class Readability:
             for attribute in target.attrs:
                 attributeValues += target[attribute[0]]
 
-            if isEmbed and self.regexps['videos'].search(attributeValues):
+            if isEmbed and REGEXPS['videos'].search(attributeValues):
                 continue
 
-            if isEmbed and self.regexps['videos'].search(target.renderContents(encoding=None)):
+            if isEmbed and REGEXPS['videos'].search(target.renderContents(encoding=None)):
                 continue
             target.extract()
 
@@ -233,7 +241,7 @@ class Readability:
                 embedCount = 0
                 embeds = node.findAll("embed")
                 for embed in embeds:
-                    if not self.regexps['videos'].search(embed['src']):
+                    if not REGEXPS['videos'].search(embed['src']):
                         embedCount += 1
                 linkDensity = self.getLinkDensity(node)
                 contentLength = len(node.text)
@@ -256,7 +264,6 @@ class Readability:
 
                 if toRemove:
                     node.extract()
-
 
     def getArticleTitle(self):
         title = ''
@@ -287,15 +294,15 @@ class Readability:
     def getClassWeight(self, node):
         weight = 0
         if 'class' in node:
-            if self.regexps['negative'].search(node['class']):
+            if REGEXPS['negative'].search(node['class']):
                 weight -= 25
-            if self.regexps['positive'].search(node['class']):
+            if REGEXPS['positive'].search(node['class']):
                 weight += 25
 
         if 'id' in node:
-            if self.regexps['negative'].search(node['id']):
+            if REGEXPS['negative'].search(node['id']):
                 weight -= 25
-            if self.regexps['positive'].search(node['id']):
+            if REGEXPS['positive'].search(node['id']):
                 weight += 25
 
         return weight
