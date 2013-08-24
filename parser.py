@@ -33,3 +33,4 @@ def load_feed():
     with context.new() as ctx:
         for entry in stream.entries:
             ctx.add(target=strip_article, args=[entry.link])
+

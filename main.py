@@ -10,3 +10,4 @@ config = {}
 app = webapp2.WSGIApplication([
     ('/', HackerNewsHandler)
 ], config=config)
+

@@ -13,3 +13,4 @@ class HackerNewsHandler(webapp2.RequestHandler):
         task.start()
 
         self.response.out.write("Inserted parsing task")
+
