@@ -11,7 +11,7 @@ handlers:
 
 - url: /_ah/queue/async.*
   script: furious_router.app
-    login: admin
+  login: admin
 
 - url: .*
   script: main.app

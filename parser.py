@@ -4,6 +4,8 @@ import feedparser
 
 import readability
 
+from furious import context
+
 
 def strip_article(url):
     htmlcode = urllib2.urlopen(url).read().decode('utf-8')
@@ -28,8 +30,9 @@ def load_feed():
 
     print stream.feed.title
 
-    for entry in stream.entries:
-        strip_article(entry.link)
+    with context.new() as ctx:
+        for entry in stream.entries:
+            ctx.add(target=strip_article, args=[entry.link])
 
 
 if __name__ == "__main__":
