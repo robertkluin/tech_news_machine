@@ -71,6 +71,33 @@ def _extract_title(html):
     return title
 
 
+def _clean(element, tag):
+    target_list = element.findAll(tag)
+    is_embed = 0
+
+    if tag == 'object' or tag == 'embed':
+        is_embed = 1
+
+    for target in target_list:
+        attribute_values = ""
+        for attribute in target.attrs:
+            attribute_values += target[attribute[0]]
+
+        if is_embed and REGEXPS['videos'].search(attribute_values):
+            continue
+
+        if is_embed and REGEXPS['videos'].search(target.renderContents(encoding=None)):
+            continue
+        target.extract()
+
+
+def _clean_style(element):
+    for child in element.findAll(True):
+        del child['class']
+        del child['id']
+        del child['style']
+
+
 class Readability(object):
 
     def __init__(self, input, url):
@@ -186,15 +213,15 @@ class Readability(object):
 
     def cleanArticle(self, content):
 
-        self.cleanStyle(content)
-        self.clean(content, 'h1')
-        self.clean(content, 'object')
+        _clean_style(content)
+        _clean(content, 'h1')
+        _clean(content, 'object')
         self.cleanConditionally(content, "form")
 
         if len(content.findAll('h2')) == 1:
-            self.clean(content, 'h2')
+            _clean(content, 'h2')
 
-        self.clean(content, 'iframe')
+        _clean(content, 'iframe')
 
         self.cleanConditionally(content, "table")
         self.cleanConditionally(content, "ul")
@@ -207,32 +234,6 @@ class Readability(object):
         content = REGEXPS['killBreaks'].sub("<br />", content)
 
         return content
-
-    def clean(self,e ,tag):
-
-        targetList = e.findAll(tag)
-        isEmbed = 0
-        if tag =='object' or tag == 'embed':
-            isEmbed = 1
-
-        for target in targetList:
-            attributeValues = ""
-            for attribute in target.attrs:
-                attributeValues += target[attribute[0]]
-
-            if isEmbed and REGEXPS['videos'].search(attributeValues):
-                continue
-
-            if isEmbed and REGEXPS['videos'].search(target.renderContents(encoding=None)):
-                continue
-            target.extract()
-
-    def cleanStyle(self, e):
-
-        for elem in e.findAll(True):
-            del elem['class']
-            del elem['id']
-            del elem['style']
 
     def cleanConditionally(self, e, tag):
         tagsList = e.findAll(tag)
