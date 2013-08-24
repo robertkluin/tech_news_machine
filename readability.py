@@ -46,6 +46,31 @@ REGEXPS = {
 }
 
 
+def _remove_script(html):
+    for elem in html.findAll("script"):
+        elem.extract()
+
+
+def _remove_style(html):
+    for elem in html.findAll("style"):
+        elem.extract()
+
+
+def _remove_link(html):
+    for elem in html.findAll("link"):
+        elem.extract()
+
+
+def _extract_title(html):
+    title = ''
+    try:
+        title = html.find('title').text
+    except:
+        pass
+
+    return title
+
+
 class Readability(object):
 
     def __init__(self, input, url):
@@ -60,34 +85,23 @@ class Readability(object):
         """
         self.candidates = {}
 
-        self.input = input
         self.url = url
+        self.input = input
         self.input = REGEXPS['replaceBrs'].sub("</p><p>", self.input)
         self.input = REGEXPS['replaceFonts'].sub("<\g<1>span>",
-                                                      self.input)
+                                                 self.input)
 
         self.html = BeautifulSoup(self.input)
 
 #        print self.html.originalEncoding
 #        print self.html
-        self.removeScript()
-        self.removeStyle()
-        self.removeLink()
+        _remove_script(self.html)
+        _remove_style(self.html)
+        _remove_link(self.html)
 
-        self.title = self.getArticleTitle()
+        self.title = _extract_title(self.html)
+
         self.content = self.grabArticle()
-
-    def removeScript(self):
-        for elem in self.html.findAll("script"):
-            elem.extract()
-
-    def removeStyle(self):
-        for elem in self.html.findAll("style"):
-            elem.extract()
-
-    def removeLink(self):
-        for elem in self.html.findAll("link"):
-            elem.extract()
 
     def grabArticle(self):
 
@@ -264,16 +278,6 @@ class Readability(object):
 
                 if toRemove:
                     node.extract()
-
-    def getArticleTitle(self):
-        title = ''
-        try:
-            title = self.html.find('title').text
-        except:
-            pass
-
-        return title
-
 
     def initializeNode(self, node):
         contentScore = 0
