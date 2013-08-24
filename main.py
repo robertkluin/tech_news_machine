@@ -1,38 +1,32 @@
+import os
+import sys
 
-import urllib2
+import webapp2
 
-import feedparser
-
-import readability
-
-
-def strip_article(url):
-    htmlcode = urllib2.urlopen(url).read().decode('utf-8')
-
-    article = readability.Readability(htmlcode, url)
-
-    #data = urllib2.urlopen(url).read()
-    print article.content
+path = os.path.join(os.getcwd(), 'lib')
+if path not in sys.path:
+    sys.path.insert(0, path)
 
 
-def load_feed():
-    stream = feedparser.parse("http://news.ycombinator.com/rss")
+class TestHandler(webapp2.RequestHandler):
 
-    if not stream:
-        print "Missing stream?"
-        return
+    def get(self):
+        import feedparser
 
-    if not stream.feed:
-        print "Missing feed?"
-        print stream
-        return
+        d = feedparser.parse("https://news.ycombinator.com/rss")
+        print d.feed.title
+        print d.feed.link
+        print d.feed.description
 
-    print stream.feed.title
+        print "Title " + d.entries[0].title
+        print "Link " + d.entries[0].link
+        print "Description " + d.entries[0].description
+        print "Comments " + d.entries[0].comments
+        self.response.out.write("test")
 
-    for entry in stream.entries:
-        strip_article(entry.link)
 
+config = {}
 
-if __name__ == "__main__":
-    load_feed()
-
+app = webapp2.WSGIApplication([
+    ('/', TestHandler)
+], config=config)
