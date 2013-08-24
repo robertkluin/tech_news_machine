@@ -6,6 +6,7 @@ BASE_DIR := $(shell python -c "from distutils.sysconfig import get_python_lib; p
 
 deps:
 	pip install -Ur requirements.txt
-	ln -s $(BASE_DIR)/furious lib
-	ln -s $(BASE_DIR)/BeautifulSoup.py lib
-	ln -s $(BASE_DIR)/feedparser.py lib
+	mkdir -p lib
+	ln -s $(BASE_DIR)/furious lib/
+	ln -s $(BASE_DIR)/BeautifulSoup.py lib/
+	ln -s $(BASE_DIR)/feedparser.py lib/
