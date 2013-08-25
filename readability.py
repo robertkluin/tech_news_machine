@@ -71,6 +71,36 @@ def _extract_title(html):
     return title
 
 
+def _clean(element, tag):
+
+    target_list = element.findAll(tag)
+    is_embed = 0
+    if tag == 'object' or tag == 'embed':
+        is_embed = 1
+
+    for target in target_list:
+        attribute_values = ""
+        for attribute in target.attrs:
+            attribute_values += target[attribute[0]]
+
+        if is_embed and REGEXPS['videos'].search(attribute_values):
+            continue
+
+        if is_embed and REGEXPS['videos'].search(
+                target.renderContents(encoding=None)):
+            continue
+
+        target.extract()
+
+
+def _clean_style(element):
+
+    for child in element.findAll(True):
+        del child['class']
+        del child['id']
+        del child['style']
+
+
 def _get_class_weight(node):
     weight = 0
     if 'class' in node:
@@ -180,7 +210,7 @@ class Readability(object):
             contentScore = 1
             contentScore += innerText.count(',')
             contentScore += innerText.count(u'，')
-            contentScore +=  min(math.floor(len(innerText) / 100), 3)
+            contentScore += min(math.floor(len(innerText) / 100), 3)
 
             self.candidates[parentHash]['score'] += contentScore
 
@@ -214,18 +244,17 @@ class Readability(object):
             content = self.cleanArticle(content)
         return content
 
-
     def cleanArticle(self, content):
 
-        self.cleanStyle(content)
-        self.clean(content, 'h1')
-        self.clean(content, 'object')
+        _clean_style(content)
+        _clean(content, 'h1')
+        _clean(content, 'object')
         self.cleanConditionally(content, "form")
 
         if len(content.findAll('h2')) == 1:
-            self.clean(content, 'h2')
+            _clean(content, 'h2')
 
-        self.clean(content, 'iframe')
+        _clean(content, 'iframe')
 
         self.cleanConditionally(content, "table")
         self.cleanConditionally(content, "ul")
@@ -238,32 +267,6 @@ class Readability(object):
         content = REGEXPS['killBreaks'].sub("<br />", content)
 
         return content
-
-    def clean(self,e ,tag):
-
-        targetList = e.findAll(tag)
-        isEmbed = 0
-        if tag =='object' or tag == 'embed':
-            isEmbed = 1
-
-        for target in targetList:
-            attributeValues = ""
-            for attribute in target.attrs:
-                attributeValues += target[attribute[0]]
-
-            if isEmbed and REGEXPS['videos'].search(attributeValues):
-                continue
-
-            if isEmbed and REGEXPS['videos'].search(target.renderContents(encoding=None)):
-                continue
-            target.extract()
-
-    def cleanStyle(self, e):
-
-        for elem in e.findAll(True):
-            del elem['class']
-            del elem['id']
-            del elem['style']
 
     def cleanConditionally(self, e, tag):
         tagsList = e.findAll(tag)
@@ -281,7 +284,7 @@ class Readability(object):
             else:
                 p = len(node.findAll("p"))
                 img = len(node.findAll("img"))
-                li = len(node.findAll("li"))-100
+                li = len(node.findAll("li")) - 100
                 input = len(node.findAll("input"))
                 embedCount = 0
                 embeds = node.findAll("embed")
@@ -296,9 +299,9 @@ class Readability(object):
                     toRemove = True
                 elif li > p and tag != "ul" and tag != "ol":
                     toRemove = True
-                elif input > math.floor(p/3):
+                elif input > math.floor(p / 3):
                     toRemove = True
-                elif contentLength < 25 and (img==0 or img>2):
+                elif contentLength < 25 and (img == 0 or img > 2):
                     toRemove = True
                 elif weight < 25 and linkDensity > 0.2:
                     toRemove = True
@@ -314,22 +317,22 @@ class Readability(object):
         contentScore = 0
 
         if node.name == 'div':
-            contentScore += 5;
+            contentScore += 5
         elif node.name == 'blockquote':
-            contentScore += 3;
+            contentScore += 3
         elif node.name == 'form':
-            contentScore -= 3;
+            contentScore -= 3
         elif node.name == 'th':
-            contentScore -= 5;
+            contentScore -= 5
 
         contentScore += _get_class_weight(node)
 
-        return {'score':contentScore, 'node': node}
+        return {'score': contentScore, 'node': node}
 
     def fixImagesPath(self, node):
         imgs = node.findAll('img')
         for img in imgs:
-            src = img.get('src',None)
+            src = img.get('src', None)
             if not src:
                 img.extract()
                 continue
