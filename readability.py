@@ -149,6 +149,27 @@ def get_link_density(node):
     return link_length / text_length
 
 
+def _fix_image_paths(base_url, node):
+    images = node.findAll('img')
+    for image in images:
+        src = image.get('src', None)
+        if not src:
+            image.extract()
+            continue
+
+        if 'http://' != src[:7] and 'https://' != src[:8]:
+            new_source = urlparse.urljoin(base_url, src)
+
+            new_source_args = urlparse.urlparse(new_source)
+            new_path = posixpath.normpath(new_source_args[2])
+            new_source = urlparse.urlunparse(
+                (new_source_args.scheme, new_source_args.netloc, new_path,
+                 new_source_args.params, new_source_args.query,
+                 new_source_args.fragment))
+
+            image['src'] = new_source
+
+
 class Readability(object):
 
     def __init__(self, input, url):
@@ -188,8 +209,8 @@ class Readability(object):
             unlikelyMatchString = elem.get('id', '') + elem.get('class', '')
 
             if REGEXPS['unlikelyCandidates'].search(unlikelyMatchString) and \
-                not REGEXPS['okMaybeItsACandidate'].search(unlikelyMatchString) and \
-                elem.name != 'body':
+                    not REGEXPS['okMaybeItsACandidate'].search(unlikelyMatchString) and \
+                    elem.name != 'body':
 #                print elem
 #                print '--------------------'
                 elem.extract()
@@ -247,8 +268,8 @@ class Readability(object):
 #            print self.candidates[key]['score']
 #            print self.candidates[key]['node']
 
-            self.candidates[key]['score'] = self.candidates[key]['score'] * \
-                                            (1 - get_link_density(self.candidates[key]['node']))
+            self.candidates[key]['score'] = (self.candidates[key]['score'] *
+                (1 - get_link_density(self.candidates[key]['node'])))
 
             if not topCandidate or self.candidates[key]['score'] > topCandidate['score']:
                 topCandidate = self.candidates[key]
@@ -277,7 +298,7 @@ class Readability(object):
         self.cleanConditionally(content, "ul")
         self.cleanConditionally(content, "div")
 
-        self.fixImagesPath(content)
+        _fix_image_paths(self.url, content)
 
         content = content.renderContents(encoding=None)
 
@@ -329,21 +350,4 @@ class Readability(object):
 
                 if toRemove:
                     node.extract()
-
-    def fixImagesPath(self, node):
-        imgs = node.findAll('img')
-        for img in imgs:
-            src = img.get('src', None)
-            if not src:
-                img.extract()
-                continue
-
-            if 'http://' != src[:7] and 'https://' != src[:8]:
-                newSrc = urlparse.urljoin(self.url, src)
-
-                newSrcArr = urlparse.urlparse(newSrc)
-                newPath = posixpath.normpath(newSrcArr[2])
-                newSrc = urlparse.urlunparse((newSrcArr.scheme, newSrcArr.netloc, newPath,
-                                              newSrcArr.params, newSrcArr.query, newSrcArr.fragment))
-                img['src'] = newSrc
 
