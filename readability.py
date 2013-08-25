@@ -71,6 +71,37 @@ def _extract_title(html):
     return title
 
 
+def _get_class_weight(node):
+    weight = 0
+    if 'class' in node:
+        if REGEXPS['negative'].search(node['class']):
+            weight -= 25
+        if REGEXPS['positive'].search(node['class']):
+            weight += 25
+
+    if 'id' in node:
+        if REGEXPS['negative'].search(node['id']):
+            weight -= 25
+        if REGEXPS['positive'].search(node['id']):
+            weight += 25
+
+    return weight
+
+
+def get_link_density(self, node):
+    links = node.findAll('a')
+    text_length = len(node.text)
+
+    if text_length == 0:
+        return 0
+
+    link_length = 0
+    for link in links:
+        link_length += len(link.text)
+
+    return link_length / text_length
+
+
 class Readability(object):
 
     def __init__(self, input, url):
@@ -170,7 +201,7 @@ class Readability(object):
 #            print self.candidates[key]['node']
 
             self.candidates[key]['score'] = self.candidates[key]['score'] * \
-                                            (1 - self.getLinkDensity(self.candidates[key]['node']))
+                                            (1 - get_link_density(self.candidates[key]['node']))
 
             if not topCandidate or self.candidates[key]['score'] > topCandidate['score']:
                 topCandidate = self.candidates[key]
@@ -238,7 +269,7 @@ class Readability(object):
         tagsList = e.findAll(tag)
 
         for node in tagsList:
-            weight = self.getClassWeight(node)
+            weight = _get_class_weight(node)
             hashNode = hash(str(node))
             if hashNode in self.candidates:
                 contentScore = self.candidates[hashNode]['score']
@@ -257,7 +288,7 @@ class Readability(object):
                 for embed in embeds:
                     if not REGEXPS['videos'].search(embed['src']):
                         embedCount += 1
-                linkDensity = self.getLinkDensity(node)
+                linkDensity = get_link_density(node)
                 contentLength = len(node.text)
                 toRemove = False
 
@@ -291,37 +322,9 @@ class Readability(object):
         elif node.name == 'th':
             contentScore -= 5;
 
-        contentScore += self.getClassWeight(node)
+        contentScore += _get_class_weight(node)
 
         return {'score':contentScore, 'node': node}
-
-    def getClassWeight(self, node):
-        weight = 0
-        if 'class' in node:
-            if REGEXPS['negative'].search(node['class']):
-                weight -= 25
-            if REGEXPS['positive'].search(node['class']):
-                weight += 25
-
-        if 'id' in node:
-            if REGEXPS['negative'].search(node['id']):
-                weight -= 25
-            if REGEXPS['positive'].search(node['id']):
-                weight += 25
-
-        return weight
-
-    def getLinkDensity(self, node):
-        links = node.findAll('a')
-        textLength = len(node.text)
-
-        if textLength == 0:
-            return 0
-        linkLength = 0
-        for link in links:
-            linkLength += len(link.text)
-
-        return linkLength / textLength
 
     def fixImagesPath(self, node):
         imgs = node.findAll('img')
