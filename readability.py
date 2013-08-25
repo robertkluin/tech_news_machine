@@ -71,6 +71,23 @@ def _extract_title(html):
     return title
 
 
+def initialize_node(node):
+    content_score = 0
+
+    if node.name == 'div':
+        content_score += 5
+    elif node.name == 'blockquote':
+        content_score += 3
+    elif node.name == 'form':
+        content_score -= 3
+    elif node.name == 'th':
+        content_score -= 5
+
+    content_score += _get_class_weight(node)
+
+    return {'score': content_score, 'node': node}
+
+
 def _clean(element, tag):
 
     target_list = element.findAll(tag)
@@ -118,7 +135,7 @@ def _get_class_weight(node):
     return weight
 
 
-def get_link_density(self, node):
+def get_link_density(node):
     links = node.findAll('a')
     text_length = len(node.text)
 
@@ -202,10 +219,10 @@ class Readability(object):
             grandParentHash = hash(str(grandParentNode))
 
             if parentHash not in self.candidates:
-                self.candidates[parentHash] = self.initializeNode(parentNode)
+                self.candidates[parentHash] = initialize_node(parentNode)
 
             if grandParentNode and grandParentHash not in self.candidates:
-                self.candidates[grandParentHash] = self.initializeNode(grandParentNode)
+                self.candidates[grandParentHash] = initialize_node(grandParentNode)
 
             contentScore = 1
             contentScore += innerText.count(',')
@@ -312,22 +329,6 @@ class Readability(object):
 
                 if toRemove:
                     node.extract()
-
-    def initializeNode(self, node):
-        contentScore = 0
-
-        if node.name == 'div':
-            contentScore += 5
-        elif node.name == 'blockquote':
-            contentScore += 3
-        elif node.name == 'form':
-            contentScore -= 3
-        elif node.name == 'th':
-            contentScore -= 5
-
-        contentScore += _get_class_weight(node)
-
-        return {'score': contentScore, 'node': node}
 
     def fixImagesPath(self, node):
         imgs = node.findAll('img')
