@@ -4,12 +4,14 @@ import boot
 boot.setup()
 
 import datetime, hashlib, logging, webapp2
-import feedparser, furious, readability
+import feedparser, readability
 
 from google.appengine.api import blobstore
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
+
+from furious.context import Context
 
 
 class HackerNewsHandler(webapp2.RequestHandler):
@@ -36,7 +38,7 @@ def load_feed():
 
   new_articles = []
 
-  with furious.context() as context:
+  with Context() as context:
     for key, article, entry in zip(keys, articles, stream.entries):
       if article: continue
 
@@ -75,7 +77,7 @@ def fetch_article(url):
 
   url_hash = hashlib.sha1(url).hexdigest()
 
-  content_key = write_to_blobstore(article.content)
+  content_key = write_to_blobstore(article.content.encode('utf-8'))
 
   article = ArticleMeta.get_by_id(url_hash)
   article.content = content_key
