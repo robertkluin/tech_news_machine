@@ -71,10 +71,27 @@ def _extract_title(html):
     return title
 
 
+def _initialize_node(node):
+    content_score = 0
+
+    if node.name == 'div':
+        content_score += 5
+    elif node.name == 'blockquote':
+        content_score += 3
+    elif node.name == 'form':
+        content_score -= 3
+    elif node.name == 'th':
+        content_score -= 5
+
+    content_score += _get_class_weight(node)
+
+    return {'score': content_score, 'node': node}
+
+
 def _clean(element, tag):
+
     target_list = element.findAll(tag)
     is_embed = 0
-
     if tag == 'object' or tag == 'embed':
         is_embed = 1
 
@@ -86,16 +103,71 @@ def _clean(element, tag):
         if is_embed and REGEXPS['videos'].search(attribute_values):
             continue
 
-        if is_embed and REGEXPS['videos'].search(target.renderContents(encoding=None)):
+        if is_embed and REGEXPS['videos'].search(
+                target.renderContents(encoding=None)):
             continue
+
         target.extract()
 
 
 def _clean_style(element):
+
     for child in element.findAll(True):
         del child['class']
         del child['id']
         del child['style']
+
+
+def _get_class_weight(node):
+    weight = 0
+    if 'class' in node:
+        if REGEXPS['negative'].search(node['class']):
+            weight -= 25
+        if REGEXPS['positive'].search(node['class']):
+            weight += 25
+
+    if 'id' in node:
+        if REGEXPS['negative'].search(node['id']):
+            weight -= 25
+        if REGEXPS['positive'].search(node['id']):
+            weight += 25
+
+    return weight
+
+
+def _get_link_density(node):
+    links = node.findAll('a')
+    text_length = len(node.text)
+
+    if text_length == 0:
+        return 0
+
+    link_length = 0
+    for link in links:
+        link_length += len(link.text)
+
+    return link_length / text_length
+
+
+def _fix_image_paths(base_url, node):
+    images = node.findAll('img')
+    for image in images:
+        src = image.get('src', None)
+        if not src:
+            image.extract()
+            continue
+
+        if 'http://' != src[:7] and 'https://' != src[:8]:
+            new_source = urlparse.urljoin(base_url, src)
+
+            new_source_args = urlparse.urlparse(new_source)
+            new_path = posixpath.normpath(new_source_args[2])
+            new_source = urlparse.urlunparse(
+                (new_source_args.scheme, new_source_args.netloc, new_path,
+                 new_source_args.params, new_source_args.query,
+                 new_source_args.fragment))
+
+            image['src'] = new_source
 
 
 class Readability(object):
@@ -137,8 +209,8 @@ class Readability(object):
             unlikelyMatchString = elem.get('id', '') + elem.get('class', '')
 
             if REGEXPS['unlikelyCandidates'].search(unlikelyMatchString) and \
-                not REGEXPS['okMaybeItsACandidate'].search(unlikelyMatchString) and \
-                elem.name != 'body':
+                    not REGEXPS['okMaybeItsACandidate'].search(unlikelyMatchString) and \
+                    elem.name != 'body':
 #                print elem
 #                print '--------------------'
                 elem.extract()
@@ -168,15 +240,15 @@ class Readability(object):
             grandParentHash = hash(str(grandParentNode))
 
             if parentHash not in self.candidates:
-                self.candidates[parentHash] = self.initializeNode(parentNode)
+                self.candidates[parentHash] = _initialize_node(parentNode)
 
             if grandParentNode and grandParentHash not in self.candidates:
-                self.candidates[grandParentHash] = self.initializeNode(grandParentNode)
+                self.candidates[grandParentHash] = _initialize_node(grandParentNode)
 
             contentScore = 1
             contentScore += innerText.count(',')
             contentScore += innerText.count(u'，')
-            contentScore +=  min(math.floor(len(innerText) / 100), 3)
+            contentScore += min(math.floor(len(innerText) / 100), 3)
 
             self.candidates[parentHash]['score'] += contentScore
 
@@ -196,8 +268,8 @@ class Readability(object):
 #            print self.candidates[key]['score']
 #            print self.candidates[key]['node']
 
-            self.candidates[key]['score'] = self.candidates[key]['score'] * \
-                                            (1 - self.getLinkDensity(self.candidates[key]['node']))
+            self.candidates[key]['score'] = (self.candidates[key]['score'] *
+                (1 - _get_link_density(self.candidates[key]['node'])))
 
             if not topCandidate or self.candidates[key]['score'] > topCandidate['score']:
                 topCandidate = self.candidates[key]
@@ -209,7 +281,6 @@ class Readability(object):
 #            print content
             content = self.cleanArticle(content)
         return content
-
 
     def cleanArticle(self, content):
 
@@ -227,7 +298,7 @@ class Readability(object):
         self.cleanConditionally(content, "ul")
         self.cleanConditionally(content, "div")
 
-        self.fixImagesPath(content)
+        _fix_image_paths(self.url, content)
 
         content = content.renderContents(encoding=None)
 
@@ -239,7 +310,7 @@ class Readability(object):
         tagsList = e.findAll(tag)
 
         for node in tagsList:
-            weight = self.getClassWeight(node)
+            weight = _get_class_weight(node)
             hashNode = hash(str(node))
             if hashNode in self.candidates:
                 contentScore = self.candidates[hashNode]['score']
@@ -251,14 +322,14 @@ class Readability(object):
             else:
                 p = len(node.findAll("p"))
                 img = len(node.findAll("img"))
-                li = len(node.findAll("li"))-100
+                li = len(node.findAll("li")) - 100
                 input = len(node.findAll("input"))
                 embedCount = 0
                 embeds = node.findAll("embed")
                 for embed in embeds:
                     if not REGEXPS['videos'].search(embed['src']):
                         embedCount += 1
-                linkDensity = self.getLinkDensity(node)
+                linkDensity = _get_link_density(node)
                 contentLength = len(node.text)
                 toRemove = False
 
@@ -266,9 +337,9 @@ class Readability(object):
                     toRemove = True
                 elif li > p and tag != "ul" and tag != "ol":
                     toRemove = True
-                elif input > math.floor(p/3):
+                elif input > math.floor(p / 3):
                     toRemove = True
-                elif contentLength < 25 and (img==0 or img>2):
+                elif contentLength < 25 and (img == 0 or img > 2):
                     toRemove = True
                 elif weight < 25 and linkDensity > 0.2:
                     toRemove = True
@@ -279,65 +350,4 @@ class Readability(object):
 
                 if toRemove:
                     node.extract()
-
-    def initializeNode(self, node):
-        contentScore = 0
-
-        if node.name == 'div':
-            contentScore += 5;
-        elif node.name == 'blockquote':
-            contentScore += 3;
-        elif node.name == 'form':
-            contentScore -= 3;
-        elif node.name == 'th':
-            contentScore -= 5;
-
-        contentScore += self.getClassWeight(node)
-
-        return {'score':contentScore, 'node': node}
-
-    def getClassWeight(self, node):
-        weight = 0
-        if 'class' in node:
-            if REGEXPS['negative'].search(node['class']):
-                weight -= 25
-            if REGEXPS['positive'].search(node['class']):
-                weight += 25
-
-        if 'id' in node:
-            if REGEXPS['negative'].search(node['id']):
-                weight -= 25
-            if REGEXPS['positive'].search(node['id']):
-                weight += 25
-
-        return weight
-
-    def getLinkDensity(self, node):
-        links = node.findAll('a')
-        textLength = len(node.text)
-
-        if textLength == 0:
-            return 0
-        linkLength = 0
-        for link in links:
-            linkLength += len(link.text)
-
-        return linkLength / textLength
-
-    def fixImagesPath(self, node):
-        imgs = node.findAll('img')
-        for img in imgs:
-            src = img.get('src',None)
-            if not src:
-                img.extract()
-                continue
-
-            if 'http://' != src[:7] and 'https://' != src[:8]:
-                newSrc = urlparse.urljoin(self.url, src)
-
-                newSrcArr = urlparse.urlparse(newSrc)
-                newPath = posixpath.normpath(newSrcArr[2])
-                newSrc = urlparse.urlunparse((newSrcArr.scheme, newSrcArr.netloc, newPath,
-                                              newSrcArr.params, newSrcArr.query, newSrcArr.fragment))
-                img['src'] = newSrc
 
