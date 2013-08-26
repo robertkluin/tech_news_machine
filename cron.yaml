@@ -1,0 +1,4 @@
+cron:
+- description: HN News Fetcher
+  url: /_check
+  schedule: every 15 minutes
