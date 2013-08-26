@@ -56,15 +56,6 @@ def load_feed():
     ndb.put_multi(new_articles)
 
 
-class FetchArticleHandler(webapp2.RequestHandler):
-  def post(self):
-    url = self.request.get('url')
-    if not url:
-      return
-
-    fetch_article(url)
-
-
 def fetch_article(url):
   try:
     result = urlfetch.fetch(url)
@@ -110,6 +101,5 @@ def write_to_blobstore(content):
 
 app = webapp2.WSGIApplication([
     ('/_check', HackerNewsHandler),
-    ('/_fetch_article', FetchArticleHandler)
 ], config={})
 
