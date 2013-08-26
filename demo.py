@@ -50,7 +50,7 @@ def load_feed():
           hn_title=entry.title))
 
       context.add(fetch_article, args=[entry.link],
-                  taskargs={'name': key.id()})
+                  task_args={'name': key.id()})
 
   if new_articles:
     ndb.put_multi(new_articles)
