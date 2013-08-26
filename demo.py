@@ -76,7 +76,7 @@ def fetch_article(url):
   article.put()
 
 
-def write_to_gcs(content, url_hash):
+def write_to_cloud_storage(content, url_hash):
   import cloudstorage as gcs
 
   gcs_filename = "BUCKET/" + url_hash
