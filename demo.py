@@ -3,7 +3,7 @@
 import boot
 boot.setup()
 
-import datetime, hashlib, logging, webapp2
+import datetime, hashlib, logging, os, webapp2
 import feedparser, readability
 
 from google.appengine.api import blobstore
@@ -78,6 +78,14 @@ def fetch_article(url):
   article = ArticleMeta.get_by_id(url_hash)
   article.last_fetch = datetime.datetime.utcnow()
   article.put()
+
+  article_url = "http://%s/article?article_id=%s" % (
+      os.environ['HTTP_HOST'], url_hash)
+
+  users = urlfetch.fetch("http://localhost:8001/process/article",
+                         payload=article_url, method="POST").content
+
+  # TODO: Notify users of new article
 
 
 def write_to_cloud_storage(content, url_hash):
