@@ -113,7 +113,7 @@ def write_to_cloud_storage(content, url_hash):
 def write_to_blobstore(content):
   from google.appengine.api import files
 
-  file_name = files.blobstore.create(mime_type='application/octet-stream')
+  file_name = files.blobstore.create(mime_type='text/html')
 
   with files.open(file_name, 'a') as blob:
    blob.write(content)
@@ -136,7 +136,7 @@ class BlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
       logging.error("No article meta found")
       return
 
-    self.send_blob(article_meta.content_key)
+    self.send_blob(article_meta.content_key, content_type='text/html')
 
 
 app = webapp2.WSGIApplication([
