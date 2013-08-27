@@ -34,5 +34,12 @@ handlers:
   script: furious_router.app
   login: admin
 
+- url: '/_check'
+  script: demo.app
+
+- url: '/article'
+  script: demo.app
+
 - url: .*
   script: main.app
+  login: required
