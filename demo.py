@@ -89,11 +89,14 @@ def fetch_article(url):
 
   interested_users = json.loads(users)
   for user_id in interested_users:
-    send_message_to_user(user_id, url_hash)
+    send_message_to_user(user_id, url_hash, article.hn_title)
 
 
-def send_message_to_user(user_id, article_id):
-  channel.send_message(str(user_id), json.dumps({"article": article_id}))
+def send_message_to_user(user_id, article_id, article_title):
+  message = {"id": article_id,
+             "title": article_title}
+
+  channel.send_message(str(user_id), json.dumps(message))
 
 
 def write_to_cloud_storage(content, url_hash):
