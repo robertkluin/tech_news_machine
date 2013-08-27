@@ -4,10 +4,10 @@
 {% endblock %}
 {% block content %}
   <div class="container">
-    <ol>
+    <ol id="article_list">
     {% for article in articles %}
         <li>
-            <a href="/content/{{ article.content }}">{{ article.hn_title }}</a>
+            <a href="/article?article_id={{ article.content }}">{{ article.hn_title }}</a>
             <a class="btn-small btn-link" href="{{ article.url }}">View Original</a>
         </li>
     {% endfor %}
@@ -17,7 +17,20 @@
 {% block script %}
     <script>
         onOpened = function() { console.log('opened'); }
-        onMessage = function(message) { console.log('mesage recieved: ' + message.data); }
+        onMessage = function(message) {
+          article = JSON.parse(message.data);
+
+          var new_li = document.createElement('li');
+          var new_link = document.createElement('a');
+          new_li.appendChild(new_link);
+
+          new_link.setAttribute("href", "/article?article_id=" + article.id)
+          new_link.appendChild(document.createTextNode(article.title));
+
+          var article_list = document.getElementById('article_list');
+          article_list.insertBefore(new_li, article_list.firstChild);
+
+        }
         onError = function(error) { console.log('error'); }
         onClose = function() { console.log('closed'); }
         channel = new goog.appengine.Channel('{{ token }}');
