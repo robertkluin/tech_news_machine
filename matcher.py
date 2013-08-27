@@ -99,7 +99,6 @@ def tokenize_article(env):
     for token in tokens:
         users.update(INDEX['tokens'].get(token, ()))
 
-    print users
     return list(users)
 
 
