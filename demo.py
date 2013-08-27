@@ -25,7 +25,12 @@ class ArticleMeta(ndb.Model):
 
   hn_title = ndb.StringProperty(indexed=False)
   url = ndb.StringProperty(indexed=False)
-  content = ndb.BlobKeyProperty(indexed=False)
+
+  @property
+  def content_key(self):
+    """Return GCS Key for content."""
+    gcs_filename = "/newsarticles/" + self.key.id()
+    return blobstore.create_gs_key("/gs" + gcs_filename)
 
 
 def load_feed():
@@ -68,10 +73,9 @@ def fetch_article(url):
 
   url_hash = hashlib.sha1(url).hexdigest()
 
-  content_key = write_to_blobstore(article.content.encode('utf-8'))
+  write_to_cloud_storage(article.content.encode('utf-8'), url_hash)
 
   article = ArticleMeta.get_by_id(url_hash)
-  article.content = content_key
   article.last_fetch = datetime.datetime.utcnow()
   article.put()
 
@@ -79,7 +83,7 @@ def fetch_article(url):
 def write_to_cloud_storage(content, url_hash):
   import cloudstorage as gcs
 
-  gcs_filename = "BUCKET/" + url_hash
+  gcs_filename = "/newsarticles/" + url_hash
 
   with gcs.open(gcs_filename, 'w') as gcs_file:
     gcs_file.write(content)
@@ -113,7 +117,7 @@ class BlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
       logging.error("No article meta found")
       return
 
-    self.send_blob(article_meta.content)
+    self.send_blob(article_meta.content_key)
 
 
 app = webapp2.WSGIApplication([
