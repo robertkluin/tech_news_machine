@@ -3,10 +3,11 @@
 import boot
 boot.setup()
 
-import datetime, hashlib, logging, os, webapp2
+import datetime, hashlib, json, logging, os, webapp2
 import feedparser, readability
 
 from google.appengine.api import blobstore
+from google.appengine.api import channel
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 from google.appengine.ext.webapp import blobstore_handlers
@@ -86,7 +87,13 @@ def fetch_article(url):
   users = urlfetch.fetch("http://localhost:8001/process/article",
                          payload=article_url, method="POST").content
 
-  # TODO: Notify users of new article
+  interested_users = json.loads(users)
+  for user_id in interested_users:
+    send_message_to_user(user_id, url_hash)
+
+
+def send_message_to_user(user_id, article_id):
+  channel.send_message(str(user_id), json.dumps({"article": article_id}))
 
 
 def write_to_cloud_storage(content, url_hash):
