@@ -7,7 +7,6 @@ import datetime, hashlib, logging, webapp2
 import feedparser, readability
 
 from google.appengine.api import blobstore
-from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 
