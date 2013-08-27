@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block head %}
+    <script type="text/javascript" src="/_ah/channel/jsapi"></script>
+{% endblock %}
+{% block content %}
+  <div class="container">
+    <ol>
+    {% for article in articles %}
+        <li>
+            <a href="/content/{{ article.content }}">{{ article.hn_title }}</a>
+            <a class="btn-small btn-link" href="{{ article.url }}">View Original</a>
+        </li>
+    {% endfor %}
+    </ol>
+  </div>
+{% endblock %}
+{% block script %}
+    <script>
+        onOpened = function() { console.log('opened'); }
+        onMessage = function(message) { console.log('mesage recieved: ' + message.data); }
+        onError = function(error) { console.log('error'); }
+        onClose = function() { console.log('closed'); }
+        channel = new goog.appengine.Channel('{{ token }}');
+        socket = channel.open();
+        socket.onopen = onOpened;
+        socket.onmessage = onMessage;
+        socket.onerror = onError;
+        socket.onclose = onClose;
+    </script>
+{% endblock %}
