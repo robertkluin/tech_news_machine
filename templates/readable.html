@@ -7,17 +7,3 @@
       {{ article|safe }}
   </div>
 {% endblock %}
-{% block script %}
-    <script>
-        onOpened = function() { console.log('opened'); }
-        onMessage = function(message) { console.log('mesage recieved: ' + message.data); }
-        onError = function(error) { console.log('error'); }
-        onClose = function() { console.log('closed'); }
-        channel = new goog.appengine.Channel('{{ token }}');
-        socket = channel.open();
-        socket.onopen = onOpened;
-        socket.onmessage = onMessage;
-        socket.onerror = onError;
-        socket.onclose = onClose;
-    </script>
-{% endblock %}
