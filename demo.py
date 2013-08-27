@@ -9,6 +9,7 @@ import feedparser, readability
 from google.appengine.api import blobstore
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
+from google.appengine.ext.webapp import blobstore_handlers
 
 from furious.context import Context
 
@@ -98,7 +99,25 @@ def write_to_blobstore(content):
 
   return files.blobstore.get_blob_key(file_name)
 
+
+class BlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
+
+  def get(self):
+    article_id = self.request.get('article_id')
+    if not article_id:
+      logging.error("No article id")
+      return
+
+    article_meta = ArticleMeta.get_by_id(article_id)
+    if not article_meta:
+      logging.error("No article meta found")
+      return
+
+    self.send_blob(article_meta.content)
+
+
 app = webapp2.WSGIApplication([
     ('/_check', HackerNewsHandler),
+    ('/article', BlobHandler),
 ], config={})
 
