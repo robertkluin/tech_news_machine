@@ -69,6 +69,10 @@ def fetch_article(url):
   except:
     return
 
+  if 'html' not in result.headers.get('content-type', ''):
+    # Just take the easy way out and don't do anything with these, for now....
+    return
+
   raw_html = result.content.decode('utf-8')
 
   article = readability.Readability(raw_html, url)
