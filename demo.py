@@ -37,6 +37,14 @@ class ArticleMeta(ndb.Model):
 def load_feed():
   stream = feedparser.parse("http://news.ycombinator.com/rss")
 
+  if not stream:
+      logging.error('Error fetching stream')
+      return
+
+  if not stream.entries:
+      logging.error('No entries in stream.', stream)
+      return
+
   keys = [ndb.Key(ArticleMeta, hashlib.sha1(entry.link).hexdigest())
           for entry in stream.entries]
 
@@ -46,7 +54,9 @@ def load_feed():
 
   with Context() as context:
     for key, article, entry in zip(keys, articles, stream.entries):
-      if article: continue
+      if article:
+        logging.debug("Skipping article at %s", entry.link)
+        continue
 
       logging.info("Found new article at %s", entry.link)
 
@@ -56,7 +66,7 @@ def load_feed():
           hn_title=entry.title))
 
       context.add(fetch_article, args=[entry.link],
-                  task_args={'name': key.id(),
+                  task_args={'name': "art-" + key.id(),
                              'countdown': 30})
 
   if new_articles:
