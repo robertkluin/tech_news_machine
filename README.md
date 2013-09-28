@@ -22,10 +22,9 @@ You will need to add the following to the `static` directory:
 
    * [Bootstrap](http://getbootstrap.com/)
    * [Underscore](http://underscorejs.org/) (minified version)
-   * [Backbone](http://backbonejs.org/) (minified version)
 
-The JavaScript files (Underscore and Backbone) go into the `js` directory that
-was created when you copied the Bootstrap contents into `static`.
+The JavaScript file (Underscore) go into the `js` directory that was created
+when you copied the Bootstrap contents into `static`.
 
 Usage
 -----
