@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block head %}
     <script type="text/javascript" src="/_ah/channel/jsapi"></script>
+    <script type="text/javascript" src="/static/js/underscore-min.js"></script>
 {% endblock %}
 {% block content %}
   <div class="container">
@@ -8,7 +9,7 @@
     {% for article in articles %}
         <li>
             <a href="/article?article_id={{ article.content }}">{{ article.hn_title }}</a>
-            <a class="btn-small btn-link" href="{{ article.url }}">View Original</a>
+            &nbsp;&nbsp;(<a class="btn-link" href="{{ article.url }}">view original</a>)
         </li>
     {% endfor %}
     </ol>
@@ -16,31 +17,18 @@
 {% endblock %}
 {% block script %}
     <script>
+        var newArticleTemplate = _.template(
+            "<a href=\"/article?article_id=<%= id %>\"><%= title %></a>&nbsp;&nbsp;(<a href=\"<%= url %>\">view original</a>)");
+
         onOpened = function() { console.log('opened'); }
         onMessage = function(message) {
           article = JSON.parse(message.data);
 
           var new_li = document.createElement('li');
-          var new_link = document.createElement('a');
-          new_li.appendChild(new_link);
-
-          new_link.setAttribute("href", "/article?article_id=" + article.id)
-          new_link.appendChild(document.createTextNode(article.title));
-
-          new_li.appendChild(document.createTextNode("  ("));
-
-          var original_link = document.createElement('a');
-          new_li.appendChild(original_link);
-
-
-          original_link.setAttribute("href", article.url)
-          original_link.appendChild(document.createTextNode("View Original"));
-
-          new_li.appendChild(document.createTextNode(")"));
+          new_li.innerHTML = newArticleTemplate(article);
 
           var article_list = document.getElementById('article_list');
           article_list.insertBefore(new_li, article_list.firstChild);
-
         }
         onError = function(error) { console.log('error'); }
         onClose = function() { console.log('closed'); }
