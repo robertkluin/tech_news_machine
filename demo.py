@@ -89,11 +89,12 @@ def fetch_article(url):
 
   interested_users = json.loads(users)
   for user_id in interested_users:
-    send_message_to_user(user_id, url_hash, article.hn_title)
+    send_message_to_user(user_id, url, url_hash, article.hn_title)
 
 
-def send_message_to_user(user_id, article_id, article_title):
+def send_message_to_user(user_id, url, article_id, article_title):
   message = {"id": article_id,
+             "url": url,
              "title": article_title}
 
   channel.send_message(str(user_id), json.dumps(message))

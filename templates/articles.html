@@ -27,6 +27,17 @@
           new_link.setAttribute("href", "/article?article_id=" + article.id)
           new_link.appendChild(document.createTextNode(article.title));
 
+          new_li.appendChild(document.createTextNode("  ("));
+
+          var original_link = document.createElement('a');
+          new_li.appendChild(original_link);
+
+
+          original_link.setAttribute("href", article.url)
+          original_link.appendChild(document.createTextNode("View Original"));
+
+          new_li.appendChild(document.createTextNode(")"));
+
           var article_list = document.getElementById('article_list');
           article_list.insertBefore(new_li, article_list.firstChild);
 
