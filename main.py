@@ -3,8 +3,9 @@ boot.setup()
 
 import webapp2
 
-from handlers import HackerNewsHandler
 from handlers import FileServeHandler
+from handlers import HackerNewsHandler
+from handlers import KeywordsHandler
 from handlers import SendMessageHandler
 from handlers import ShowFeedHandler
 
@@ -14,6 +15,7 @@ app = webapp2.WSGIApplication([
     ('/_load', HackerNewsHandler),
     ('/', ShowFeedHandler),
     ('/send', SendMessageHandler),
-    ('/content/([^/]+)?', FileServeHandler)
+    ('/content/([^/]+)?', FileServeHandler),
+    ('/keywords', KeywordsHandler),
 ], config=config)
 

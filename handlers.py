@@ -1,3 +1,4 @@
+import json
 import urllib
 
 import webapp2
@@ -5,6 +6,7 @@ import webapp2
 from webapp2_extras import jinja2
 
 from google.appengine.api import channel
+from google.appengine.api import urlfetch
 from google.appengine.api import users
 
 #from furious.async import Async
@@ -87,3 +89,17 @@ class FileServeHandler(AuthBaseHandler):
         # TODO: Would like to render in a pane with our theme but it's breaking
         # right now.
         #self.render_response('readable.html', article=str(r.read().decode('utf-8')))
+
+
+class KeywordsHandler(AuthBaseHandler):
+    def post(self):
+        """Update a users list of interested keywords."""
+        super(KeywordsHandler, self).get()
+
+        payload = {
+            "user_id": self.user.user_id(),
+            "tokens": [token.strip() for token in self.request.body.split(',')]
+        }
+        urlfetch.fetch("http://localhost:8001/subscription/update",
+                       payload=json.dumps(payload), method="POST")
+
