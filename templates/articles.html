@@ -5,6 +5,7 @@
 {% endblock %}
 {% block content %}
   <div class="container">
+    <input type="text" id="keywords" placeholder="Keyword list (comma separated)">
     <ol id="article_list">
     {% for article in articles %}
         <li>
@@ -38,5 +39,14 @@
         socket.onmessage = onMessage;
         socket.onerror = onError;
         socket.onclose = onClose;
+
+
+        var listOLikes = document.getElementById('keywords');
+
+        listOLikes.onchange = function() {
+            request = new XMLHttpRequest();
+            request.open("POST", "/keywords");
+            request.send(listOLikes.value);
+        }
     </script>
 {% endblock %}
