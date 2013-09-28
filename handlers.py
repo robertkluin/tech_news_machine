@@ -95,10 +95,12 @@ class KeywordsHandler(AuthBaseHandler):
     def post(self):
         """Update a users list of interested keywords."""
         super(KeywordsHandler, self).get()
+        tokens = list(set(
+            [token.strip() for token in self.request.body.lower().split(',')]))
 
         payload = {
             "user_id": self.user.user_id(),
-            "tokens": [token.strip() for token in self.request.body.split(',')]
+            "tokens": tokens
         }
         urlfetch.fetch("http://localhost:8001/subscription/update",
                        payload=json.dumps(payload), method="POST")

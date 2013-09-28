@@ -90,7 +90,7 @@ def tokenize_article(env):
     if not text:
         return "no text"
 
-    tokens = set(text.split())
+    tokens = set(text.lower().split())
 
     if not tokens:
         return "no tokens"
