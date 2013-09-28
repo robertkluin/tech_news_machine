@@ -54,7 +54,7 @@ def update_subscriptions(env):
             continue
 
         try:
-            token_list.remove(token)
+            token_list.remove(user_id)
         except ValueError:
             pass
 
