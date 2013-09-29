@@ -9,6 +9,8 @@ from google.appengine.api import channel
 from google.appengine.api import urlfetch
 from google.appengine.api import users
 
+import settings
+
 
 class BaseHandler(webapp2.RequestHandler):
 
@@ -71,6 +73,6 @@ class KeywordsHandler(AuthBaseHandler):
             "user_id": self.user.user_id(),
             "tokens": tokens
         }
-        urlfetch.fetch("http://localhost:8001/subscription/update",
+        urlfetch.fetch(settings.MATCHER_BASE_URL + "/subscription/update",
                        payload=json.dumps(payload), method="POST")
 
