@@ -14,10 +14,11 @@ from article import DistilledArticleServer
 config = {}
 
 app = webapp2.WSGIApplication([
-    ('/article/([^/]+)?', DistilledArticleServer),
-    ('/_check', ProcessHackerNewsHandler),
     ('/', ShowFeedHandler),
-    ('/send', SendMessageHandler),
+
+    ('/_check', ProcessHackerNewsHandler),
+
+    ('/article/([^/]+)?', DistilledArticleServer),
     ('/keywords', KeywordsHandler),
 ], config=config)
 
