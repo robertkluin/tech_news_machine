@@ -3,11 +3,13 @@ import hashlib
 import json
 import logging
 import os
+import urllib
 
 from google.appengine.api import blobstore
 from google.appengine.api import channel
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
+from google.appengine.ext.webapp import blobstore_handlers
 
 from furious.async import Async
 from furious.context import Context
@@ -15,6 +17,24 @@ from furious.context import Context
 import readability
 
 import settings
+
+
+class DistilledArticleServer(blobstore_handlers.BlobstoreDownloadHandler):
+
+    def get(self, article_id):
+        article_id = str(urllib.unquote(article_id))
+
+        article_id = self.request.get('article_id')
+        if not article_id:
+            logging.error("No article id")
+            return
+
+        article_meta = ArticleMeta.get_by_id(article_id)
+        if not article_meta:
+            logging.error("No article meta found")
+            return
+
+        self.send_blob(article_meta.content_key, content_type='text/html')
 
 
 class ArticleMeta(ndb.Model):

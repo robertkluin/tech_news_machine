@@ -76,21 +76,6 @@ class SendMessageHandler(AuthBaseHandler):
         channel.send_message(self.user.user_id(), "test")
 
 
-class FileServeHandler(AuthBaseHandler):
-
-    def get(self, resource):
-        super(FileServeHandler, self).get()
-
-        from google.appengine.ext import blobstore
-        resource = str(urllib.unquote(resource))
-        r = blobstore.BlobReader(resource)
-        self.response.write(r.read())
-
-        # TODO: Would like to render in a pane with our theme but it's breaking
-        # right now.
-        #self.render_response('readable.html', article=str(r.read().decode('utf-8')))
-
-
 class KeywordsHandler(AuthBaseHandler):
     def post(self):
         """Update a users list of interested keywords."""
