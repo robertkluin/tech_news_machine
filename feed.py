@@ -9,7 +9,7 @@ from article import process_new_articles
 
 def process_feed(feed_url=settings.HN_RSS_FEED):
     """Fetch an RSS feed, then insert article processors for new articles."""
-    entries = get_feed_entries(feed_url)
+    entries = _get_feed_entries(feed_url)
 
     if not entries:
         return
@@ -17,7 +17,7 @@ def process_feed(feed_url=settings.HN_RSS_FEED):
     process_new_articles(entries)
 
 
-def get_feed_entries(feed_url):
+def _get_feed_entries(feed_url):
     """Fetch the RSS feed at feed_url and return the entries from it."""
     stream = feedparser.parse(feed_url)
 
