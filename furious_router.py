@@ -1,10 +1,16 @@
 import boot
 boot.setup()
 
-#from appstats_logger.middleware import stats_logger_wsgi_middleware
-
 from furious.handlers import webapp
 
+import settings
 
 app = webapp.app
-#app = stats_logger_wsgi_middleware(webapp.app)
+
+if settings.ENABLE_RPC_PROFILE_LOGGING:
+    global app
+
+    from appstats_logger.middleware import stats_logger_wsgi_middleware
+
+    app = stats_logger_wsgi_middleware(webapp.app)
+

@@ -1,3 +1,6 @@
+
+ENABLE_RPC_PROFILE_LOGGING = False
+
 MATCHER_BASE_URL = 'http://localhost:8001'
 
 
