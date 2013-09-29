@@ -7,11 +7,6 @@ import logging, webapp2
 
 from google.appengine.ext.webapp import blobstore_handlers
 
-from feed import process_feed
-
-class HackerNewsHandler(webapp2.RequestHandler):
-  def get(self):
-    process_feed()
 
 
 class BlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
@@ -31,7 +26,6 @@ class BlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
 
 
 app = webapp2.WSGIApplication([
-    ('/_check', HackerNewsHandler),
     ('/article', BlobHandler),
 ], config={})
 

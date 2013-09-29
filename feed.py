@@ -1,4 +1,5 @@
 import logging
+import webapp2
 
 import feedparser
 
@@ -7,7 +8,12 @@ import settings
 from article import process_new_articles
 
 
-def process_feed(feed_url=settings.HN_RSS_FEED):
+class ProcessHackerNewsHandler(webapp2.RequestHandler):
+    def get(self):
+        process_feed(settings.HN_RSS_FEED)
+
+
+def process_feed(feed_url):
     """Fetch an RSS feed, then insert article processors for new articles."""
     entries = _get_feed_entries(feed_url)
 

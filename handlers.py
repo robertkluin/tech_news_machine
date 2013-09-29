@@ -9,22 +9,6 @@ from google.appengine.api import channel
 from google.appengine.api import urlfetch
 from google.appengine.api import users
 
-#from furious.async import Async
-from furious import async
-
-#from parser import load_feed
-
-
-class HackerNewsHandler(webapp2.RequestHandler):
-
-    def get(self):
-        from demo import load_feed
-
-        task = async.Async(target=load_feed)
-        task.start()
-
-        self.response.out.write("Inserted parsing task")
-
 
 class BaseHandler(webapp2.RequestHandler):
 
