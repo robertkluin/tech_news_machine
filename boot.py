@@ -1,3 +1,5 @@
+"""Contains code used to initialize and bootstrap the instance."""
+
 import os
 import sys
 
@@ -5,7 +7,7 @@ import sys
 def setup():
     """Call this method to configure your WSGI application.
 
-    Add any of your customs setup calls to this as well.
+    Add any of your custom setup calls to this as well.
     """
     setup_lib_path()
 
