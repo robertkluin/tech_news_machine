@@ -1,5 +1,9 @@
 
+CS_BUCKET = "/newsarticles/"
+
 ENABLE_RPC_PROFILE_LOGGING = False
+
+HN_RSS_FEED = "http://news.ycombinator.com/rss"
 
 MATCHER_BASE_URL = 'http://localhost:8001'
 
