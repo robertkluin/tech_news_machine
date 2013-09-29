@@ -1,3 +1,5 @@
+"""Ensure the instance is fully configured (paths setup)."""
+
 import boot
 boot.setup()
 
