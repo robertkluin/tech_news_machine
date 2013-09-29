@@ -1,3 +1,7 @@
+"""Contains core article related logic, such as fetching, parsing, and
+sending notifications.
+"""
+
 import datetime
 import hashlib
 import json
@@ -20,6 +24,7 @@ import settings
 
 
 class DistilledArticleServer(blobstore_handlers.BlobstoreDownloadHandler):
+    """This handler is used to serve an item out of Cloud Storage."""
 
     def get(self, article_id):
         article_id = str(urllib.unquote(article_id))
@@ -92,6 +97,9 @@ def process_new_articles(entries):
 
 
 def process_article(url):
+    """Attempt to fetch, then distill, store, and notify users of an
+    article.
+    """
     try:
         result = urlfetch.fetch(url)
     except:
@@ -151,6 +159,7 @@ def _match_and_notify_users(url, url_hash, hn_title):
 
 
 def _get_article_content(content, url):
+    """Tease out the interesting portion of an article."""
     # Get the raw HTML, as a utf8 string.
     raw_html = content.decode('utf-8')
 
@@ -160,8 +169,9 @@ def _get_article_content(content, url):
 
 
 def _update_last_fetch_time(url_hash):
-    # Update the last_fetch time for the article, this way it will not be
-    # processed again.
+    """Update the last_fetch time for the article, this way it will not be
+    processed again.
+    """
     article = ArticleMeta.get_by_id(url_hash)
     article.last_fetch = datetime.datetime.utcnow()
     article.put()
