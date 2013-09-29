@@ -1,3 +1,7 @@
+"""Contains logic associated with the processing of article-containing RSS
+feeds.
+"""
+
 import logging
 import webapp2
 
@@ -9,6 +13,7 @@ from article import process_new_articles
 
 
 class ProcessHackerNewsHandler(webapp2.RequestHandler):
+    """This is called to initiate the fetching and parsing of an RSS feed."""
     def get(self):
         process_feed(settings.HN_RSS_FEED)
 
