@@ -1,36 +1,36 @@
-import urllib2
+import logging
 
 import feedparser
 
-import readability
+import settings
 
-from furious import context
-
-
-def strip_article(url):
-    htmlcode = urllib2.urlopen(url).read().decode('utf-8')
-
-    article = readability.Readability(htmlcode, url)
-
-    #data = urllib2.urlopen(url).read()
-    print article.content
+from article import process_new_articles
 
 
-def load_feed():
-    stream = feedparser.parse("http://news.ycombinator.com/rss")
+def process_feed(feed_url=settings.HN_RSS_FEED):
+    """Fetch an RSS feed, then insert article processors for new articles."""
+    entries = get_feed_entries(feed_url)
+
+    if not entries:
+        return
+
+    process_new_articles(entries)
+
+
+def get_feed_entries(feed_url):
+    """Fetch the RSS feed at feed_url and return the entries from it."""
+    stream = feedparser.parse(feed_url)
 
     if not stream:
-        print "Missing stream?"
+        logging.error('Error fetching stream: No Stream.')
         return
 
-    if not stream.feed:
-        print "Missing feed?"
-        print stream
+    if stream.feed:
+        logging.info('Fetched feed: %s', stream.feed.title)
+
+    if not stream.entries:
+        logging.warning('No entries in stream: %s.', stream)
         return
 
-    print stream.feed.title
-
-    with context.new() as ctx:
-        for entry in stream.entries:
-            ctx.add(target=strip_article, args=[entry.link])
+    return stream.entries
 
